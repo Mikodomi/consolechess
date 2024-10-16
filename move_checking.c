@@ -21,6 +21,9 @@ MoveStatus check_move(Board* board, char* move, color_type who) {
         case 'K': {
             return move_king(board, move+1, who, checks);
         }
+        case 'O': {
+            return move_castles(board, move, who, checks);
+        }
         case '\0': {
             return WRONG_INPUT;
         }
@@ -33,6 +36,9 @@ MoveStatus check_move(Board* board, char* move, color_type who) {
 static MoveStatus _move_piece(Board* board, Piece* current, int row, int column, int checks) {
     Piece curr = *current;
     Piece temp = board->pieces[row][column];
+    if (temp.color == curr.color) {
+        return INVALID;
+    }
     current->posRow = row;
     current->posColumn = column;
     board->pieces[row][column] = *current;
@@ -52,6 +58,7 @@ static MoveStatus _move_piece(Board* board, Piece* current, int row, int column,
     }
     board->pieces[row][column].posRow = row;
     board->pieces[row][column].posColumn = column;
+    board->pieces[row][column].moves++;
     switch (temp.color) {
         case WHITE:
             board->white_pieces--;
@@ -653,3 +660,72 @@ GameStatus is_stale_mate(Board* board, color_type who) {
     }
     return ONGOING;
 }
+
+static int math_castle(Board* board, color_type who, int len) {
+    Piece* king = &(board->pieces[(who == WHITE) ? 0 : 7][4]);
+    if (king->type != KING) {
+        return 0;
+    }
+    if (king->color != who) {
+        return 0;
+    }
+    if (king->moves > 0) {
+        return 0;
+    }
+    Piece* rook = &(board->pieces[(who == WHITE ? 0 : 7)][(len == 3) ? 7 : 0]);
+    if (rook->type != ROOK || rook->color != who || rook->moves > 0) {
+        return 0;
+    }
+    if (len == 3) {
+        if (board->pieces[((who == WHITE) ? 0 : 7)][5].type != NONE || 
+            board->pieces[((who == WHITE) ? 0 : 7)][6].type != NONE) {
+            return 0;
+        }
+        if (is_attacked(board, ((who == WHITE) ? 0 : 7), 5, who) || 
+            is_attacked(board, ((who == WHITE) ? 0 : 7), 6, who)) {
+            return 0;
+        }
+    } else {
+        if (board->pieces[((who == WHITE) ? 0 : 7)][1].type != NONE ||
+            board->pieces[((who == WHITE) ? 0 : 7)][2].type != NONE || 
+            board->pieces[((who == WHITE) ? 0 : 7)][3].type != NONE) {
+                return 0;
+        }
+        if (is_attacked(board, ((who == WHITE) ? 0 : 7), 1, who) ||
+            is_attacked(board, ((who == WHITE) ? 0 : 7), 2, who) ||
+            is_attacked(board, ((who == WHITE) ? 0 : 7), 3, who)) {
+                return 0;
+            }
+    }
+    return 1;
+}
+
+MoveStatus move_castles(Board* board, char* move, color_type who, int checks) {
+    int len = strlen(move);
+    // ugly comparison of strings... who cares...
+    if (move[0] != 'O' || move[2] != 'O') {
+        return WRONG_INPUT;
+    }
+    if (move[1] != '-') {
+        return WRONG_INPUT;
+    }
+    if (len == 5) {
+        if (move[3] != '-' || move[4] != 'O') {
+            return WRONG_INPUT;
+        }
+    }
+    int can_castle = math_castle(board, who, len);
+    if (!can_castle) {
+        return INVALID;
+    }
+    Piece* king = &(board->pieces[(who == WHITE) ? 0 : 7][4]);
+    Piece* rook = &(board->pieces[(who == WHITE) ? 0 : 7][(len == 3) ? 7 : 0]);
+    if (_move_piece(board, king, ((who == WHITE) ? 0 : 7), ((len == 3) ? 5 : 2), checks) == INVALID) {
+        return INVALID;
+    }
+    if (_move_piece(board, rook, ((who == WHITE) ? 0 : 7), ((len == 3) ? 4 : 3), checks) == INVALID) {
+        _move_piece(board, king, ((who == WHITE) ? 0 : 7), 4, checks);
+        return INVALID;
+    }
+    return CORRECT;
+    }

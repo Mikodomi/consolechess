@@ -6,6 +6,7 @@ Piece make_piece(Board* board, piece_type which, color_type who, int row, int co
     Piece current;
     current.type = which;
     current.color = who;
+    current.moves = 0;
     switch (who) {
         case WHITE: 
             board->white_pieces++;

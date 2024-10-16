@@ -35,8 +35,8 @@ void printBoard(Board const* board) {
 
 Board starting_board() {
     Board board;
-    board.black_pieces = 16;
-    board.white_pieces = 16;
+    board.black_pieces = 8;
+    board.white_pieces = 8;
     // white pieces first
     color_type who = WHITE;
     int row = 0;

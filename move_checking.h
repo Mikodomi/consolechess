@@ -25,6 +25,7 @@ MoveStatus move_rook(Board* board, char* move, color_type who, int checks);
 MoveStatus move_bishop(Board* board, char* move, color_type who, int checks); 
 MoveStatus move_queen(Board* board, char* move, color_type who, int checks); 
 MoveStatus move_king(Board* board, char* move, color_type who, int checks); 
+MoveStatus move_castles(Board* board, char* move, color_type who, int checks);
 
 int is_check(Board* board, color_type who); //checks if 'who' king is in check
 int is_attacked(Board* board, int row, int column, color_type who);

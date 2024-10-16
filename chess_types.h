@@ -23,6 +23,7 @@ typedef struct {
     int8_t value;
     int8_t posRow;
     int8_t posColumn;
+    int moves;
 } Piece;
 
 typedef struct {
