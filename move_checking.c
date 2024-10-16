@@ -358,7 +358,7 @@ static Piece* all_rook(Board* board,
                        int len,
                        int takes,
                        color_type who) {
-    int correctAmount;
+    int correctAmount = 0;
     Piece* correctRook = NULL; 
     Piece* temp = linear_math(board, row, column, 1, 0, move, len, takes, who, ROOK);
     correctAmount += (temp) ? 1 : 0;
