@@ -24,6 +24,7 @@ typedef struct {
     int8_t posRow;
     int8_t posColumn;
     int moves;
+    int8_t checking;
 } Piece;
 
 typedef struct {

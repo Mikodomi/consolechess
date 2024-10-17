@@ -56,6 +56,7 @@ static MoveStatus _move_piece(Board* board, Piece* current, int row, int column,
         board->pieces[curr.posRow][curr.posColumn] = curr;    
         return INVALID; 
     }
+    board->pieces[row][column].checking = checks;
     board->pieces[row][column].posRow = row;
     board->pieces[row][column].posColumn = column;
     board->pieces[row][column].moves++;
@@ -589,12 +590,12 @@ int is_check(Board* board, color_type who) { //checks if 'who' king is in check
     Piece* bishops = all_bishop(board, current->posRow, current->posColumn, move, 2, 0, -who);
     Piece* rooks = all_rook(board, current->posRow, current->posColumn, move, 2, 0, -who);
     Piece* queens = all_queen(board, current->posRow, current->posColumn, move, 2, 0, -who);
-    return (pawn1 != NULL ||
-            pawn2 != NULL || 
-            knights != NULL ||
-            bishops != NULL ||
-            rooks != NULL ||
-            queens != NULL);
+    return ((pawn1 != NULL) +
+            (pawn2 != NULL) + 
+            (knights != NULL) +
+            (bishops != NULL) +
+            (rooks != NULL) +
+            (queens != NULL));
 }
 //todo
 //generalised version of is_check for any square (used primarily in is_mate (horrible code btw))
@@ -622,6 +623,31 @@ int is_attacked(Board* board, int row, int column, color_type who) {
             rooks != NULL ||
             queens != NULL);
 }
+
+// looks for piece that is checking 'who' king
+// function should only return the pointer of 1 piece since
+// it only gets called under the condition that
+// 1) king is in check
+// 2) checked by one piece
+// this has bugs in it for sure. who cares....
+static Piece* find_checker(Board* board, color_type who) {
+    int row = 0;
+    int column = 0;
+    int found = 0;
+    for (; row < 8 && !found; row++) {
+        for (; column < 8; column++) {
+            if (board->pieces[row][column].checking && board->pieces[row][column].color == -who) {
+                return &(board->pieces[row][column]);
+            }
+        }
+    }
+    return NULL;
+}
+
+// todo: fix mate conditions
+// in its current state, the function doesn't take into consideration
+// the possibility of blocking a check or taking the piece that is attacking the king
+// which is wrong
 GameStatus is_stale_mate(Board* board, color_type who) {
     int row = 0;
     int column = 0;
@@ -636,17 +662,21 @@ GameStatus is_stale_mate(Board* board, color_type who) {
         }
     }
     attackedSquares += is_attacked(board, row+1, column, who);
-    attackedSquares += is_attacked(board, row+1, column, who);
-    attackedSquares += is_attacked(board, row+1, column, who);
-    attackedSquares += is_attacked(board, row+1, column, who);
-    attackedSquares += is_attacked(board, row+1, column, who);
-    attackedSquares += is_attacked(board, row+1, column, who);
-    attackedSquares += is_attacked(board, row+1, column, who);
-    attackedSquares += is_attacked(board, row+1, column, who);
-    if (attackedSquares == 8) {
-        if (is_check(board, who)) {
-            return MATE;
-        }
+    attackedSquares += is_attacked(board, row-1, column, who);
+    attackedSquares += is_attacked(board, row, column+1, who);
+    attackedSquares += is_attacked(board, row, column-1, who);
+    attackedSquares += is_attacked(board, row+1, column+1, who);
+    attackedSquares += is_attacked(board, row+1, column-1, who);
+    attackedSquares += is_attacked(board, row-1, column+1, who);
+    attackedSquares += is_attacked(board, row-1, column-1, who);
+    if (attackedSquares != 8) {
+        return ONGOING;
+    }
+    int checking = is_check(board, who);
+    if (checking > 1) {
+        return MATE;
+    }
+    if (checking == 0) {
         switch(who) {
             case WHITE:
                 if (board->white_pieces == 1) {
@@ -658,7 +688,21 @@ GameStatus is_stale_mate(Board* board, color_type who) {
                 }
         }
     }
-    return ONGOING;
+    Piece* attacker = find_checker(board, who);
+    if (attacker == NULL) {
+        return ONGOING;
+    }
+    if (attacker->type == KNIGHT) {
+        return MATE;
+    }
+    if (is_attacked(board, attacker->posRow, attacker->posColumn, who)) {
+        return ONGOING;
+    }
+    if (attacker->type == PAWN) {
+        if (is_attacked(board, attacker->posRow, attacker->posColumn, who)) {
+            return MATE; 
+        }
+    }
 }
 
 static int math_castle(Board* board, color_type who, int len) {
