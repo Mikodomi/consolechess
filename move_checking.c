@@ -282,9 +282,9 @@ static Piece* linear_math(Board* board,
     }
     Piece* current = &(board->pieces[row][column]);
     if (current->type == what && current->color == who) {
-        if (isKing && is_check(board, who)) {
-            return NULL;
-        }
+        // if (isKing && is_check(board, who)) {
+        //     return NULL;
+        // }
         if (len == 3 + takes) {
             if ((row == move[0] - '0' - 1) || (column == move[0] - 'a')) {
                 return current;
@@ -571,19 +571,29 @@ int is_check(Board* board, color_type who) { //checks if 'who' king is in check
     move[1] = current->posRow + '0' + 1;
     // Piece* pawn1 = math_pawn(board, current->posRow, current->posColumn, -who, 0); 
     // Piece* pawn2 = math_pawn(board, current->posRow, current->posColumn, -who, 1);
-    Piece* pawn1 = &(board->pieces[current->posRow+who][current->posColumn-1]);
-    if (pawn1->type != PAWN) {
-        pawn1 = NULL;
+    Piece* pawn1 = NULL;
+    if (current->posColumn != 0) {
+        pawn1 = &(board->pieces[current->posRow+who][current->posColumn-1]);
     }
-    if (pawn1 && pawn1->color == who) {
-        pawn1 = NULL;
+    if (pawn1 != NULL) {
+        if (pawn1->type != PAWN) {
+            pawn1 = NULL;
+        }
+        if (pawn1 && pawn1->color == who) {
+            pawn1 = NULL;
+        }
     }
-    Piece* pawn2 = &(board->pieces[current->posRow+who][current->posColumn+1]);
-    if (pawn2->type != PAWN) {
-        pawn2 = NULL;
+    Piece* pawn2 = NULL;
+    if (current->posColumn != 7) {
+        pawn2 = &(board->pieces[current->posRow+who][current->posColumn+1]);
     }
-    if (pawn2 && pawn2->color == who) {
-        pawn2 = NULL;
+    if (pawn2 != NULL) {
+        if (pawn2->type != PAWN) {
+            pawn2 = NULL;
+        }
+        if (pawn2 && pawn2->color == who) {
+            pawn2 = NULL;
+        }
     }
     
     Piece* knights = all_knight(board, current->posRow, current->posColumn, move, 2, 0, -who);
@@ -653,10 +663,11 @@ GameStatus is_stale_mate(Board* board, color_type who) {
     int column = 0;
     int found = 0;
     int attackedSquares = 0;
+    Piece* current;
     for (; row < 8 && !found; row++) {
         for (; column < 8 && !found; column++) {
-            Piece current = board->pieces[row][column];
-            if (current.type == KING && current.color == who) {
+            current = &(board->pieces[row][column]);
+            if (current->type == KING && current->color == who) {
                 break;
             }
         }
@@ -703,6 +714,31 @@ GameStatus is_stale_mate(Board* board, color_type who) {
             return MATE; 
         }
     }
+    int rowOffset = 0;
+    int columnOffset = 0;
+    if (current->posRow > attacker->posRow) {
+        rowOffset = 1;
+    } else if (current->posRow < attacker->posRow) {
+        rowOffset = -1;
+    }
+    // current->posRow == attacker.posColumn covered by int rowOffset = 0; (theyre on the same row)
+    // situation is analogous in the case of posColumn
+    if (current->posColumn > attacker->posColumn) {
+        columnOffset = 1;
+    } else if (current->posColumn < attacker->posColumn) {
+        columnOffset = -1;
+    }
+    
+    int travRow = attacker->posRow + rowOffset; 
+    int travColumn = attacker->posColumn + columnOffset;
+    do {
+        if (is_attacked(board, travRow, travColumn, who)) {
+            return ONGOING;
+        }
+        travRow += rowOffset;
+        travColumn += columnOffset;
+    } while ((travRow != current->posRow) && (travColumn != current->posColumn));
+    return MATE; 
 }
 
 static int math_castle(Board* board, color_type who, int len) {
