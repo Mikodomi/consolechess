@@ -27,12 +27,21 @@ typedef struct {
     int8_t checking;
 } Piece;
 
+typedef enum {
+   MATE,
+   STALEMATE,
+   ONGOING,
+   DRAW,
+   RESIGNED
+} GameStatus;
+
 typedef struct {
     Piece pieces[8][8]; // [number][letter]
     // pieces are stored in the order: a1, a2, a3,..., b1, b2, b3,...
     int8_t black_pieces;
     int8_t white_pieces;
     Piece* last_moved;
+    GameStatus status;
 } Board;
 
 void printBoard(Board const* board);

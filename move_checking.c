@@ -659,6 +659,9 @@ static Piece* find_checker(Board* board, color_type who) {
 // the possibility of blocking a check or taking the piece that is attacking the king
 // which is wrong
 GameStatus is_stale_mate(Board* board, color_type who) {
+    if (board->status == RESIGNED) {
+        return RESIGNED;
+    }
     int row = 0;
     int column = 0;
     int found = 0;

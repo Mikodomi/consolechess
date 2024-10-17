@@ -37,6 +37,7 @@ Board starting_board() {
     Board board;
     board.black_pieces = 8;
     board.white_pieces = 8;
+    board.status = ONGOING;
     // white pieces first
     color_type who = WHITE;
     int row = 0;
@@ -83,6 +84,12 @@ MoveStatus game_turn(Board* board, color_type who) {
     do {
         fgets(move, 8, stdin);
         move[strlen(move)-1] = '\0';
+        // ugly string comparison... who cares....
+        if ((move[0] == 'r') && (move[1] == 'e') && (move[2] == 's')) {
+            board->status = RESIGNED; 
+            done = CORRECT;
+            break;
+        }
         done = check_move(board, move, who);
     } while (done != CORRECT);
     return done;
@@ -98,6 +105,22 @@ int game() {
         status = is_stale_mate(&board, who);
     } while (status == ONGOING);
     printBoard(&board);
+    if (status == RESIGNED) {
+        switch (who) {
+            case WHITE: {
+                printf("White");
+                break;
+            }
+            case BLACK: {
+                printf("Black");
+                break;
+            }
+            default: {
+                printf("Nobody");
+            }
+        }
+        printf(" has won by resignation\n");
+    }
     if (status == MATE) {
         switch (-who) {
             case WHITE: {
@@ -108,8 +131,12 @@ int game() {
                 printf("Black");
                 break;
             }
+            default: {
+                printf("Nobody ");
+            }
         }
-        printf(" has won\n");
+        printf(" has won");
+        printf("\n");
     }
     getc(stdin);
 }

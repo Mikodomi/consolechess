@@ -10,12 +10,7 @@ typedef enum {
    WRONG_INPUT,
 } MoveStatus;
 
-typedef enum {
-   MATE,
-   STALEMATE,
-   ONGOING,
-   DRAW
-} GameStatus;
+
 
 MoveStatus check_move(Board* board, char* move, color_type who);
 
