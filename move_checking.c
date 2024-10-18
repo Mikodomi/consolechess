@@ -106,8 +106,8 @@ static Piece* math_pawn(Board* board,int row, int column, color_type who, int ca
 
 MoveStatus move_pawn(Board* board, char* move, color_type who, int checks) {
     int takes = 0;
+    int len = strlen(move);
     int column = move[0]-'a';
-    
     int row;
     if (move[1] != 'x') {
         row = move[1]-'0';
@@ -116,6 +116,7 @@ MoveStatus move_pawn(Board* board, char* move, color_type who, int checks) {
         row = move[3]-'0';
     }
     row--;
+    int promotion = (move[len-2-checks] == '=');
     if (!in_bounds(row, column)) {
         return WRONG_INPUT;
     }
@@ -139,6 +140,33 @@ MoveStatus move_pawn(Board* board, char* move, color_type who, int checks) {
         return _move_piece(board, is_once, row, column, checks);
     }
     if (board->pieces[row][(move[2]-'a')].type != NONE) {
+        if (promotion) {
+            // pawn promotion
+            if (row == ((who == WHITE) ? 7 : 0)) {
+                switch (move[len-1]) {
+                    case 'Q': {
+                        is_once->type = QUEEN;
+                        is_once->value = 9;
+                        break;
+                    }
+                    case 'N': {
+                        is_once->type = KNIGHT;
+                        is_once->value = 3;
+                        break;
+                    }
+                    case 'B': {
+                        is_once->type = BISHOP;
+                        is_once->value = 3;
+                        break;
+                    }
+                    case 'R': {
+                        is_once->type = ROOK;
+                        is_once->value = 5;
+                        break;
+                    }
+                }
+            }
+        }
         return _move_piece(board, is_once, row, move[2]-'a', checks);
     }
     // enpassant
