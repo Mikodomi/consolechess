@@ -67,6 +67,8 @@ static MoveStatus _move_piece(Board* board, Piece* current, int row, int column,
         case BLACK:
             board->black_pieces--;
             break;
+        default:
+            break;
     }
     board->last_moved = &(board->pieces[row][column]);
     return CORRECT;
@@ -831,10 +833,10 @@ MoveStatus move_castles(Board* board, char* move, color_type who, int checks) {
     }
     Piece* king = &(board->pieces[(who == WHITE) ? 0 : 7][4]);
     Piece* rook = &(board->pieces[(who == WHITE) ? 0 : 7][(len == 3) ? 7 : 0]);
-    if (_move_piece(board, king, ((who == WHITE) ? 0 : 7), ((len == 3) ? 5 : 2), checks) == INVALID) {
+    if (_move_piece(board, king, ((who == WHITE) ? 0 : 7), ((len == 3) ? 6 : 2), checks) == INVALID) {
         return INVALID;
     }
-    if (_move_piece(board, rook, ((who == WHITE) ? 0 : 7), ((len == 3) ? 4 : 3), checks) == INVALID) {
+    if (_move_piece(board, rook, ((who == WHITE) ? 0 : 7), ((len == 3) ? 5 : 3), checks) == INVALID) {
         _move_piece(board, king, ((who == WHITE) ? 0 : 7), 4, checks);
         return INVALID;
     }
